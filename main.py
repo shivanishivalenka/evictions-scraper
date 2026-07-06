@@ -14,6 +14,12 @@ page_count = 0
 hearing_date_search_url = 'https://eapps.courts.state.va.us/gdcourts/caseSearch.do?fromSidebar=true&searchLanding' \
                           '=searchLanding&searchType=hearingDate&searchDivision=V&searchFipsCode=510&curentFipsCode=510'
 
+
+# Accept terms
+browser.get('https://eapps.courts.state.va.us/gdcourts')
+time.sleep(3)
+browser.find_element(By.XPATH, '/html/body/table/tbody/tr[1]/td/table/tbody/tr[2]/td/div[2]/main/form/table/tbody/tr[2]/td/input[1]').click()
+time.sleep(3)
 # get date
 cleaned_today = datetime.today().strftime('%m-%d-%Y')
 # write headers for case output file
