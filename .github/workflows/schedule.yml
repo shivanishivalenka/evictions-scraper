@@ -23,3 +23,10 @@ jobs:
 
       - name: Run script
         run: python main.py
+
+      - name: Upload output files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scrape-results
+          path: files/
