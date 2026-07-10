@@ -14,6 +14,9 @@ page_count = 0
 hearing_date_search_url = 'https://eapps.courts.state.va.us/gdcourts/caseSearch.do?fromSidebar=true&searchLanding' \
                           '=searchLanding&searchType=hearingDate&searchDivision=V&searchFipsCode=510&curentFipsCode=510'
 
+
+case_num_search_url = 'https://eapps.courts.state.va.us/gdcourts/criminalCivilCaseSearch.do?fromSidebar=true' \
+                      '&formAction=searchLanding&searchDivision=V&searchFipsCode=510&curentFipsCode=510'
 # Accept terms
 browser.get('https://eapps.courts.state.va.us/gdcourts')
 time.sleep(3)
@@ -53,17 +56,20 @@ with open(f'files/hearings_scraped_on_{cleaned_today}.csv', 'a', newline='') as 
         # reset case count
         case_count = 0
         # ===CHANGED: STEP 1 - collect all UD case numbers across ALL pages first===
-        # previously this was mixed with processing which caused stale element crash
-        # now we collect everything into plain strings before touching any case
+        # before this was mixed with processing which resulted in stale element crash
+        # now we're collecting everything into plain strings before touching any case
         ud_cases = []
  
         while True:
             time.sleep(2)  # wait for page to fully load
             try:
                 rows = browser.find_elements(By.CSS_SELECTOR, 'tr.evenRow, tr.oddRow')
+                print(f'    Rows found on page: {len(rows)}')
                 for row in rows:
                     try:
                         tds = row.find_elements(By.CSS_SELECTOR, "td.gridrow")
+                        # if len(tds) > 4:
+                        #     print(f'    Case type found: {tds[4].text}')
                         if len(tds) > 4 and tds[4].text == "Unlawful Detainer":
                             # extract to plain strings immediately
                             td_list = [td.text for td in tds[1:]]
@@ -78,29 +84,26 @@ with open(f'files/hearings_scraped_on_{cleaned_today}.csv', 'a', newline='') as 
  
             # ===NEW: pagination - click Next if it exists, else stop===
             try:
-                next_button = browser.find_element(By.LINK_TEXT, 'Next')
-                next_button.click()
+                browser.find_element(By.NAME, 'caseInfoScrollForward').click()
             except:
-                break  # no more pages, move on
+                break
+            
  
-        # ===CHANGED: STEP 2 - now process each case number separately===
-        # using plain string case numbers, no element references from step 1
+        # ===CHANGED: STEP 2 - now processing each case number separately===
+        # using plain string case numbers, *no element references from step 1*
         # navigating to case number search page fresh for each case
         for case_num in ud_cases:
-            try:
-                browser.get(case_num_search_url)
-                time.sleep(1)
-                browser.find_element(By.ID, 'displayCaseNumber').send_keys(case_num)
-                browser.find_element(By.CLASS_NAME, 'submitBox').click()
-                time.sleep(1)
-                writer.writerow(hearing_scrape(case_num))
-                case_count += 1
-                total_case_count += 1
-                print(f'    Scraped case: {case_num}')
-            except Exception as e:
-                logging.warning(f'Failed to scrape case {case_num}: {e}')
-                continue
- 
+            
+            browser.get(case_num_search_url)
+            time.sleep(1)
+            browser.find_element(By.ID, 'displayCaseNumber').send_keys(case_num)
+            browser.find_element(By.CLASS_NAME, 'submitBox').click()
+            time.sleep(1)
+            writer.writerow(hearing_scrape(case_num))
+            case_count += 1
+            total_case_count += 1
+            print(f'    Scraped case: {case_num}')
+            
         page_count += 1
         runtime_delta = str(datetime.now() - start_time)
         runtime = runtime_delta.split('.')[0]
