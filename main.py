@@ -114,7 +114,7 @@ with open(f'files/hearings_scraped_on_{cleaned_today}.csv', 'a', newline='') as 
         print(f'    Runtime: {runtime}')
 
 # write to summary scrape output file
-with open(f'files/summary_scrape_on_{cleaned_today}', 'w', newline='') as summary:
+with open(f'files/summary_scrape_on_{cleaned_today}.csv', 'w', newline='') as summary:
     writer = csv.writer(summary)
     headers = ['case_number', 'defendant', 'plaintiff', 'case type', 'hearing time', 'date']
     writer.writerow(headers)
